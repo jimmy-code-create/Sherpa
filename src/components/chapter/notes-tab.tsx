@@ -144,6 +144,25 @@ export function NotesTab({
       </aside>
 
       <div className="min-w-0 space-y-4">
+        {/* Reading progress — sticky under the header on every breakpoint */}
+        <ReadingProgress />
+
+        {/* Mobile section jump bar (desktop has the sticky TOC on the left) */}
+        <nav
+          aria-label="Note sections"
+          className="scroll-x -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:hidden"
+        >
+          {SECTIONS.map((s) => (
+            <a
+              key={s.id}
+              href={`#sec-${s.id}`}
+              className="shrink-0 rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-[12.5px] font-bold text-[var(--fg-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
+
         {/* Toolbar */}
         <Card className="flex flex-wrap items-center gap-2 p-3">
           <div className="flex gap-1.5" role="group" aria-label="Note depth">
@@ -404,6 +423,55 @@ export function NotesTab({
           </Card>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/** Slim reading-progress bar, sticky at the top of the notes column. */
+function ReadingProgress() {
+  const [pct, setPct] = React.useState(0);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = ref.current?.parentElement;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const total = rect.height - window.innerHeight;
+        const done = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
+        setPct(total > 0 ? Math.round((done / total) * 100) : 100);
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="sticky top-14 z-20 -mx-4 sm:mx-0"
+      role="progressbar"
+      aria-valuenow={pct}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Reading progress"
+    >
+      <div className="h-1 w-full bg-[var(--border-default)]">
+        <div
+          className="h-full bg-[var(--brand-primary)] transition-[width] duration-150 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="sr-only">{pct}% read</p>
     </div>
   );
 }

@@ -72,6 +72,18 @@ export interface Chapter {
   estimatedHours: number;
   prerequisites: string[];
   topics: Topic[];
+  /**
+   * Curated, educator-attributed video lectures. Rendered strictly as
+   * YouTube IFrame embeds (youtube.com/embed/{id}) — never downloaded,
+   * re-hosted or proxied (see Session Engine spec).
+   */
+  videos?: ChapterVideo[];
+}
+
+export interface ChapterVideo {
+  youtubeId: string;
+  title: string;
+  channel: string;
 }
 
 /**

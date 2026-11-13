@@ -139,7 +139,10 @@ export function OnboardingWizard({ step, profile }: { step: StepSlug; profile: P
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduced) {
-      void confetti({ particleCount: 120, spread: 70, origin: { y: 0.7 }, disableForReducedMotion: true });
+      // lazy: keeps canvas-confetti (~100KB) out of the initial onboarding bundle
+      void import("canvas-confetti").then((m) =>
+        m.default({ particleCount: 120, spread: 70, origin: { y: 0.7 }, disableForReducedMotion: true }),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);

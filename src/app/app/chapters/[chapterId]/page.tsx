@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Map, BookOpen, GraduationCap, BrainCircuit, PenLine, BarChart3, Flag } from "lucide-react";
+import { ChevronRight, Map, BookOpen, GraduationCap, BrainCircuit, PenLine, BarChart3, Flag, Youtube } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { progress, quizStore, reviewStore, roadmapStore } from "@/lib/store";
 import { resolveChapter } from "@/lib/curriculum/catalog";
@@ -9,6 +9,7 @@ import { Badge, ProgressBar } from "@/components/ui";
 import { NotesTab } from "@/components/chapter/notes-tab";
 import { RoadmapTab } from "@/components/chapter/roadmap-tab";
 import { ResourcesTab } from "@/components/chapter/resources-tab";
+import { WatchTab } from "@/components/chapter/watch-tab";
 import { TutorTab } from "@/components/chapter/tutor-tab";
 import { PracticeTab } from "@/components/chapter/practice-tab";
 import { ProgressTab } from "@/components/chapter/progress-tab";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 
 const TABS = [
   { id: "notes", label: "Notes", icon: BookOpen },
+  { id: "watch", label: "Watch", icon: Youtube },
   { id: "roadmap", label: "Roadmap", icon: Map },
   { id: "resources", label: "Institutes", icon: GraduationCap },
   { id: "tutor", label: "Tutor", icon: BrainCircuit },
@@ -123,6 +125,7 @@ export default async function ChapterHubPage({
         {activeTab === "notes" ? (
           <NotesTab chapterSlug={chapterId} chapterName={chapter.name} defaultDepth={profile.preferences.defaultDepth} />
         ) : null}
+        {activeTab === "watch" ? <WatchTab chapterName={chapter.name} videos={chapter.videos ?? []} /> : null}
         {activeTab === "roadmap" ? <RoadmapTab chapterSlug={chapterId} chapterName={chapter.name} hasRoadmap={Boolean(roadmap)} /> : null}
         {activeTab === "resources" ? <ResourcesTab chapterSlug={chapterId} chapterName={chapter.name} /> : null}
         {activeTab === "tutor" ? <TutorTab chapterSlug={chapterId} chapterName={chapter.name} /> : null}

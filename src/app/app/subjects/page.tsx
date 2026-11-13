@@ -4,8 +4,9 @@ import { requireUser } from "@/lib/session";
 import { progress } from "@/lib/store";
 import { allSubjectsOnPath, resolveSubject } from "@/lib/curriculum/catalog";
 import { SUBJECTS } from "@/lib/curriculum/chapters";
-import { Card, ProgressBar, EmptyState, Badge } from "@/components/ui";
+import { EmptyState } from "@/components/ui";
 import { CommandPaletteTrigger } from "@/components/command-palette";
+import { SubjectLibrary, type LibrarySubject } from "@/components/subject-library";
 
 export const dynamic = "force-dynamic";
 
@@ -20,57 +21,35 @@ export default async function SubjectsPage() {
       Boolean(s) && !onPathSlugs.has((s as NonNullable<ReturnType<typeof resolveSubject>>).slug),
   );
 
-  function card(subject: NonNullable<ReturnType<typeof resolveSubject>>) {
+  function toLibrary(subject: NonNullable<ReturnType<typeof resolveSubject>>): LibrarySubject {
     const done = subject.chapters.filter((c) =>
       userProgress.some((p) => p.chapterSlug === c.slug && p.status === "mastered"),
     ).length;
     const started = subject.chapters.filter((c) =>
       userProgress.some((p) => p.chapterSlug === c.slug && p.status !== "not_started"),
     ).length;
-    const pct = subject.chapters.length ? Math.round((done / subject.chapters.length) * 100) : 0;
-    return (
-      <Card key={subject.slug} hover className="p-4">
-        <Link href={`/app/subjects/${subject.slug}`} className="block">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span
-                className="flex size-10 items-center justify-center rounded-[12px] text-white"
-                style={{ background: subject.color }}
-                aria-hidden="true"
-              >
-                <BookOpen className="size-5" />
-              </span>
-              <div>
-                <h2 className="font-display text-[16px] font-extrabold text-[var(--fg-primary)]">{subject.name}</h2>
-                <p className="text-[12px] font-semibold text-[var(--fg-muted)]">
-                  {subject.curriculum.name} · {subject.level.name} · {subject.country.name}
-                </p>
-              </div>
-            </div>
-            {started > 0 ? (
-              <Badge tone="warning">◐ {started} started</Badge>
-            ) : (
-              <Badge tone="neutral">○ not started</Badge>
-            )}
-          </div>
-          <p className="mt-2.5 text-[13.5px] leading-relaxed text-[var(--fg-secondary)]">{subject.blurb}</p>
-          <div className="mt-3 flex items-center gap-3">
-            <ProgressBar value={pct} className="flex-1" label={`Progress in ${subject.name}`} />
-            <span className="text-[12.5px] font-bold tabular-nums text-[var(--fg-muted)]">
-              {done}/{subject.chapters.length}
-            </span>
-          </div>
-        </Link>
-      </Card>
-    );
+    const videos = subject.chapters.reduce((n, c) => n + (c.videos?.length ?? 0), 0);
+    return {
+      slug: subject.slug,
+      name: subject.name,
+      color: subject.color,
+      blurb: subject.blurb,
+      meta: `${subject.curriculum.name} · ${subject.level.name} · ${subject.country.name}`,
+      chapters: subject.chapters.length,
+      videos,
+      done,
+      started,
+      pct: subject.chapters.length ? Math.round((done / subject.chapters.length) * 100) : 0,
+    };
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-[1.8rem] font-extrabold text-[var(--fg-primary)]">Subjects</h1>
+        <h1 className="font-display text-[1.8rem] font-extrabold text-[var(--fg-primary)]">Subject library</h1>
         <p className="mt-1 text-[15px] text-[var(--fg-secondary)]">
-          Everything on your path ({profile.curriculumSlug}), plus the rest of the catalogue.
+          Everything on your path ({profile.curriculumSlug}), plus the rest of the catalogue — with lectures where we
+          have them.
         </p>
       </div>
 
@@ -82,12 +61,7 @@ export default async function SubjectsPage() {
       </div>
 
       {onPath.length > 0 ? (
-        <section aria-labelledby="on-path">
-          <h2 id="on-path" className="mb-3 font-display text-[13px] font-extrabold uppercase tracking-[0.12em] text-[var(--fg-muted)]">
-            On your path
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">{onPath.map((s) => card(s))}</div>
-        </section>
+        <SubjectLibrary onPath={onPath.map(toLibrary)} others={others.map(toLibrary)} />
       ) : (
         <EmptyState
           icon={<BookOpen className="size-8" aria-hidden="true" />}
@@ -96,15 +70,6 @@ export default async function SubjectsPage() {
           action={<Link href="/onboarding/country" className="btn btn-primary">Set my path</Link>}
         />
       )}
-
-      {others.length > 0 ? (
-        <section aria-labelledby="rest">
-          <h2 id="rest" className="mb-3 font-display text-[13px] font-extrabold uppercase tracking-[0.12em] text-[var(--fg-muted)]">
-            Rest of the catalogue
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">{others.map((s) => card(s))}</div>
-        </section>
-      ) : null}
     </div>
   );
 }

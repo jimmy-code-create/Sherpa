@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Lock } from "lucide-react";
+import { ChevronRight, Lock, Youtube } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { progress } from "@/lib/store";
 import { resolveSubject } from "@/lib/curriculum/catalog";

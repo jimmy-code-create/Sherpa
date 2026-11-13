@@ -75,6 +75,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Refraction and Snell's law", difficulty: "medium" },
       { name: "Lens formula and power", difficulty: "hard" },
     ],
+    videos: [
+      { youtubeId: "5UrCVQQcvTs", title: "Light: Reflection and Refraction — full chapter", channel: "Physics Wallah" },
+      { youtubeId: "hUcRUM5ZEUU", title: "Light — Reflection and Refraction in One Shot (Boards 2026)", channel: "Physics Wallah" },
+    ],
   },
   {
     slug: "electricity",
@@ -89,6 +93,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Ohm's law and resistance", difficulty: "medium" },
       { name: "Series and parallel combinations", difficulty: "medium" },
       { name: "Heating effect and power", difficulty: "hard" },
+    ],
+    videos: [
+      { youtubeId: "CgG4ZmxTQME", title: "Electricity Class 10 Physics — full chapter explained", channel: "Magnet Brains" },
+      { youtubeId: "j3GfvfyNePw", title: "Electricity Class 10 — full chapter in 1 hour (CBSE Ch.12)", channel: "Magnet Brains" },
     ],
   },
   {
@@ -105,6 +113,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Oxidation and reduction", difficulty: "medium" },
       { name: "Corrosion and rancidity", difficulty: "easy" },
     ],
+    videos: [
+      { youtubeId: "AEyJ0MpddzQ", title: "Chemical Reactions and Equations — full chapter in animation (NCERT Ch.1)", channel: "Soul Baltistan" },
+      { youtubeId: "B55_UADPl40", title: "Chemical Reactions and Equations Class 10 — NCERT full chapter one-shot", channel: "CBSE Guidance" },
+    ],
   },
   {
     slug: "trigonometry-intro",
@@ -119,6 +131,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Standard angles", difficulty: "easy" },
       { name: "Trigonometric identities", difficulty: "hard" },
       { name: "Heights and distances", difficulty: "medium" },
+    ],
+    videos: [
+      { youtubeId: "tlScprG6vo0", title: "Introduction to Trigonometry — Class 10 full chapter one shot (NCERT Ch.8)", channel: "Prodigy" },
+      { youtubeId: "ILqIq8aBFGU", title: "Introduction to Trigonometry L2 — CBSE Class 10 Maths Ch.8", channel: "Vedantu Class 9 and 10" },
     ],
   },
   {
@@ -135,6 +151,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Kirchhoff's laws", difficulty: "hard" },
       { name: "Potentiometer and EMF", difficulty: "hard" },
     ],
+    videos: [
+      { youtubeId: "vUCDSDWyX4c", title: "Current Electricity Class 12 One Shot — NCERT Ch.3 full revision", channel: "Vijeta / Akshay Tyagi Sir" },
+      { youtubeId: "oGVh1qfjce0", title: "Current Electricity Class 12 Physics — NCERT Chapter 3 one shot", channel: "Technical Physics Guru" },
+    ],
   },
   {
     slug: "linear-equations-graphs",
@@ -149,6 +169,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Slope-intercept form", difficulty: "easy" },
       { name: "Systems of equations", difficulty: "medium" },
       { name: "Modelling with linear functions", difficulty: "hard" },
+    ],
+    videos: [
+      { youtubeId: "D9ZVCvDltys", title: "Graphing Linear Equations — slope and y-intercept walkthrough", channel: "Khan Academy" },
+      { youtubeId: "5fkh01mClLU", title: "More examples of constructing linear equations in slope-intercept form", channel: "Khan Academy" },
     ],
   },
   {
@@ -166,6 +190,9 @@ export const CHAPTERS: Chapter[] = [
       { name: "Mitosis and the cell cycle", difficulty: "hard" },
       { name: "Transport in and out of cells", difficulty: "hard" },
     ],
+    videos: [
+      { youtubeId: "KjKWmpr7H_Y", title: "B1 Cell Biology — whole topic (AQA GCSE Biology revision)", channel: "Primrose Kitten" },
+    ],
   },
   {
     slug: "differentiation",
@@ -180,6 +207,10 @@ export const CHAPTERS: Chapter[] = [
       { name: "Differentiating x^n", difficulty: "medium" },
       { name: "Chain, product and quotient rules", difficulty: "hard" },
       { name: "Stationary points and optimisation", difficulty: "hard" },
+    ],
+    videos: [
+      { youtubeId: "MrpNlEfz95g", title: "Differentiation from First Principles — Live A-level Maths", channel: "Physics & Maths Tutor" },
+      { youtubeId: "kZ5WmqTOIKM", title: "Differentiation from first principles — Maths Tutor Alex", channel: "Telios Tutors" },
     ],
   },
 ];
