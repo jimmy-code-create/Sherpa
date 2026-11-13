@@ -199,9 +199,14 @@ function supabaseRest(): { base: string; headers: Record<string, string> } | nul
   };
 }
 
-async function kvLoad(): Promise<Database | null> {
+interface KvResult {
+  ok: boolean; // false = network/HTTP error (NOT the same as an empty table)
+  data: Database | null;
+}
+
+async function kvFetchOnce(): Promise<KvResult> {
   const rest = supabaseRest();
-  if (!rest) return null;
+  if (!rest) return { ok: false, data: null };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
@@ -209,15 +214,41 @@ async function kvLoad(): Promise<Database | null> {
       `${rest.base}/sherpa_kv?select=payload&key=eq.${KV_KEY}`,
       { headers: rest.headers, signal: ctrl.signal, cache: "no-store" },
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { ok: false, data: null };
     const rows = (await res.json()) as Array<{ payload?: Partial<Database> }>;
-    if (!rows.length || !rows[0].payload) return null;
-    return { ...structuredClone(EMPTY), ...rows[0].payload };
+    if (!rows.length || !rows[0].payload) return { ok: true, data: null };
+    return { ok: true, data: { ...structuredClone(EMPTY), ...rows[0].payload } };
   } catch {
-    return null;
+    return { ok: false, data: null };
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function kvLoad(): Promise<KvResult> {
+  // one retry: transient PostgREST timeouts must not read as "empty database"
+  const first = await kvFetchOnce();
+  if (first.ok) return first;
+  await new Promise((r) => setTimeout(r, 300));
+  return kvFetchOnce();
+}
+
+/** Diagnostic for /api/health — reports whether the KV read path works. */
+export async function kvHealth(): Promise<{
+  mode: boolean;
+  status: "off" | "ok" | "empty" | "error";
+  ms: number;
+  rows: number;
+}> {
+  if (!supabaseRest()) return { mode: false, status: "off", ms: 0, rows: 0 };
+  const t0 = Date.now();
+  const res = await kvLoad();
+  return {
+    mode: true,
+    status: !res.ok ? "error" : res.data ? "ok" : "empty",
+    ms: Date.now() - t0,
+    rows: res.data ? 1 : 0,
+  };
 }
 
 async function kvSave(d: Database): Promise<void> {
@@ -268,9 +299,17 @@ const KV_CACHE_TTL_MS = 1000;
 let kvCacheFetchedAt = 0;
 
 async function loadFresh(): Promise<Database> {
-  const remote = await kvLoad();
+  const res = await kvLoad();
   const notes = db?.notes ?? [];
-  db = remote ? { ...remote, notes } : structuredClone(EMPTY);
+  if (res.data) {
+    db = { ...res.data, notes };
+  } else if (res.ok) {
+    // table genuinely empty (first boot) — safe to start from scratch
+    db = structuredClone(EMPTY);
+  }
+  // on error (res.ok === false) keep the previous in-memory db if we have one:
+  // a transient PostgREST outage must not log users out or 404 their data
+  if (!db) db = structuredClone(EMPTY);
   kvCacheFetchedAt = Date.now();
   return db;
 }
