@@ -14,6 +14,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LogoMarkSvg } from "./logo-mark";
 
 const NAV = [
   { href: "/app", label: "Today", icon: Home, exact: true },
@@ -24,14 +25,7 @@ const NAV = [
 ] as const;
 
 function LogoMark() {
-  return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[var(--brand-primary)] shadow-[var(--shadow-brand)]">
-      <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M6 23L13 11l4.2 7.2L19.6 14 26 23H6z" fill="#fff" />
-        <circle cx="13" cy="11" r="2.1" fill="#F59E0B" />
-      </svg>
-    </span>
-  );
+  return <LogoMarkSvg size={32} className="shrink-0 drop-shadow-[0_2px_6px_rgba(79,70,229,0.35)]" />;
 }
 
 function useActive() {
