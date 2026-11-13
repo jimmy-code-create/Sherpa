@@ -319,3 +319,13 @@ create policy "public_read" on subjects for select using (true);
 create policy "public_read" on chapters for select using (true);
 create policy "public_read" on topics for select using (true);
 create policy "resources_public_read" on resources for select using (verified = true);
+
+-- KV table backing the app store when Supabase env vars are set
+-- (serverless-safe persistence; accessed only with the service-role key,
+-- which bypasses RLS).
+create table if not exists sherpa_kv (
+  key text primary key,
+  payload jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table sherpa_kv enable row level security;
