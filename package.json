@@ -1,0 +1,49 @@
+{
+  "name": "sherpa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sherpa — a curriculum-aware AI study tutor. Pick country → curriculum → level → subject → chapter and get a roadmap, deep notes, vetted resources, a Socratic tutor, adaptive practice and progress analytics.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
+    "katex": "^0.16.47",
+    "lucide-react": "^0.462.0",
+    "mermaid": "^12.3.0",
+    "next": "15.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "tailwind-merge": "^2.5.5",
+    "unified": "^11.0.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/canvas-confetti": "^1.6.4",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
