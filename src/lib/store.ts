@@ -175,11 +175,91 @@ const EMPTY: Database = {
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "db.json");
 
+// When the Supabase env vars are set (production on Vercel), the whole
+// database lives in the `sherpa_kv` Postgres table (see 0001_init.sql) so
+// every serverless function instance sees the same state. Without them we
+// fall back to the local JSON file (Local Demo Mode).
+const KV_KEY = "db";
+
 let db: Database | null = null;
 let loadPromise: Promise<Database> | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
 
+function supabaseRest(): { base: string; headers: Record<string, string> } | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return {
+    base: `${url.replace(/\/+$/, "")}/rest/v1`,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+  };
+}
+
+async function kvLoad(): Promise<Database | null> {
+  const rest = supabaseRest();
+  if (!rest) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(
+      `${rest.base}/sherpa_kv?select=payload&key=eq.${KV_KEY}`,
+      { headers: rest.headers, signal: ctrl.signal, cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{ payload?: Partial<Database> }>;
+    if (!rows.length || !rows[0].payload) return null;
+    return { ...structuredClone(EMPTY), ...rows[0].payload };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function kvSave(d: Database): Promise<void> {
+  const rest = supabaseRest();
+  if (!rest) return;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    await fetch(`${rest.base}/sherpa_kv`, {
+      method: "POST",
+      headers: { ...rest.headers, Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ key: KV_KEY, payload: d, updated_at: new Date().toISOString() }),
+      signal: ctrl.signal,
+    });
+  } catch (err) {
+    console.error("Failed to persist store to Supabase KV", err);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function kvDelete(): Promise<void> {
+  const rest = supabaseRest();
+  if (!rest) return;
+  try {
+    await fetch(`${rest.base}/sherpa_kv?key=eq.${KV_KEY}`, {
+      method: "DELETE",
+      headers: rest.headers,
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 async function load(): Promise<Database> {
+  if (supabaseRest()) {
+    // Serverless-safe: always read fresh from Postgres so every function
+    // instance (Vercel may run many) sees the same users/progress.
+    const remote = await kvLoad();
+    db = remote ?? structuredClone(EMPTY);
+    return db;
+  }
   if (db) return db;
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
@@ -205,6 +285,10 @@ function scheduleFlush(): void {
 
 export async function flush(): Promise<void> {
   if (!db) return;
+  if (supabaseRest()) {
+    await kvSave(db);
+    return;
+  }
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.writeFile(DATA_FILE, JSON.stringify(db, null, 2), "utf8");
@@ -213,10 +297,11 @@ export async function flush(): Promise<void> {
   }
 }
 
-/** Test helper: wipe the in-memory and on-disk store. */
+/** Test helper: wipe the in-memory and persistent store. */
 export async function resetStore(): Promise<void> {
   db = structuredClone(EMPTY);
   loadPromise = null;
+  await kvDelete();
   try {
     await fs.rm(DATA_FILE, { force: true });
   } catch {
@@ -227,7 +312,13 @@ export async function resetStore(): Promise<void> {
 async function mutate<T>(fn: (d: Database) => T): Promise<T> {
   const d = await load();
   const result = fn(d);
-  scheduleFlush();
+  if (supabaseRest()) {
+    // Must complete before the invocation returns: a deferred timer can be
+    // frozen on serverless and the write would be lost.
+    await kvSave(d);
+  } else {
+    scheduleFlush();
+  }
   return result;
 }
 

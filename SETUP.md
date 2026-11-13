@@ -23,9 +23,15 @@ SHERPA_ADMIN_EMAIL=you@yourdomain.com   # first account with this email is admin
 ```
 
 `src/lib/store.ts` exposes `useSupabase()` — when the two Supabase env vars
-are set, swap the store calls to the Postgres schema (same shapes; the SQL is
-the source of truth). RLS policies in `0001_init.sql` already restrict every
-user table to `auth.uid()`.
+are set, the whole app database (users, profiles, progress, sessions, …) is
+persisted to the `sherpa_kv` table via the PostgREST API with the service-role
+key (service role bypasses RLS). Every request re-reads the row and every
+mutation awaits the upsert, so it is safe on multi-instance serverless
+(Vercel): sign-up on one invocation is visible to the next. Without the env
+vars it falls back to the local `.data/db.json` file (Local Demo Mode).
+The typed tables in `0001_init.sql` remain the source of truth for the
+relational schema; RLS policies there restrict every user table to
+`auth.uid()`.
 
 ## 2. AI provider
 
