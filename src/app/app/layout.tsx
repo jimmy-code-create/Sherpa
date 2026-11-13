@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const due = await reviewStore.due(current.session.userId);
 
   return (
-    <div className="flex min-h-dvh bg-[var(--bg-page)]">
+    <div className="min-h-dvh bg-[var(--bg-page)] md:flex">
       <Sidebar
         name={current.profile.displayName}
         email={current.user.email}
@@ -19,7 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         dueCount={due.length}
       />
       <div className="min-w-0 flex-1">
-        <main id="main-content" className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+        {/* pb-24 on mobile clears the fixed bottom nav; md:pb-8 restores normal padding */}
+        <main id="main-content" className="mx-auto w-full max-w-5xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 md:py-8">
           {children}
         </main>
       </div>

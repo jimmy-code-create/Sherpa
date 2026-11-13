@@ -239,7 +239,7 @@ html[data-font-scale="130"] body { font-size: 20px; }
   box-shadow: var(--shadow-sm);
 }
 .card-hover:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
 }
@@ -248,6 +248,63 @@ html[data-font-scale="130"] body { font-size: 20px; }
     transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
     border-color 150ms ease,
     box-shadow 180ms ease;
+  will-change: transform;
+}
+
+/* ── Milo the tutor persona — idle animations ─────────────────────── */
+/* Neutered globally under prefers-reduced-motion / data-reduced-motion. */
+.milo-bob {
+  animation: milo-bob 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes milo-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.milo-breathe {
+  transform-origin: 50% 90%;
+  animation: milo-breathe 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes milo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+.milo-eye {
+  animation: milo-blink 4.6s ease-in-out infinite;
+}
+@keyframes milo-blink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  94%,
+  96% {
+    transform: scaleY(0.08);
+  }
+}
+.milo-brow {
+  animation: milo-brow 2.4s ease-in-out infinite;
+}
+@keyframes milo-brow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
 }
 
 .chip {

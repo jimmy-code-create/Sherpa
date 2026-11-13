@@ -10,12 +10,15 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         </Link>
         <Link
           href="/app"
-          className="min-h-11 rounded-[var(--radius-pill)] px-4 py-2.5 text-[14px] font-semibold text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]"
+          className="min-h-11 rounded-[var(--radius-pill)] px-3 py-2 text-[13px] font-bold text-[var(--fg-muted)] underline-offset-4 transition-colors hover:text-[var(--fg-primary)] hover:underline"
         >
           Skip to dashboard
         </Link>
       </header>
-      <main className="flex flex-1 items-start justify-center px-4 pb-16 sm:px-6">{children}</main>
+      {/* Full-screen card feel on mobile; centered max-width card on desktop */}
+      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-2 sm:px-6 sm:pt-6">
+        {children}
+      </main>
     </div>
   );
 }

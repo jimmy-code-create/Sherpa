@@ -17,10 +17,12 @@ import {
   SkipForward,
   Loader2,
 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ProfileRecord } from "@/lib/store";
 import { COUNTRIES, CURRICULA, LEVELS, STREAMS } from "@/lib/curriculum/taxonomy";
 import { allSubjectsOnPath } from "@/lib/curriculum/catalog";
-import { Button, Card, ProgressBar } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
+import { TutorAvatar, TutorBubble, miloOnboardingLine } from "@/components/tutor-persona";
 
 import { STEPS as STEP_DEFS, STEP_INDEX, type StepSlug } from "@/lib/onboarding-steps";
 
@@ -143,29 +145,44 @@ export function OnboardingWizard({ step, profile }: { step: StepSlug; profile: P
   }, [step]);
 
   const progressPct = Math.round(((index + 1) / STEPS.length) * 100);
+  const reduce = useReducedMotion();
 
   return (
     <div className="w-full max-w-2xl">
-      {/* Progress */}
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between text-[12.5px] font-bold text-[var(--fg-muted)]">
-          <span>
-            Step {index + 1} of {STEPS.length} · {STEPS[index]!.label}
-          </span>
-          <span>{progressPct}%</span>
+      {/* Sleek pill progress bar — fills smoothly between steps via layoutId */}
+      <div className="mb-6 px-1">
+        <div
+          className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--border-default)]"
+          role="progressbar"
+          aria-valuenow={progressPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Onboarding progress — step ${index + 1} of ${STEPS.length}, ${STEPS[index]!.label}`}
+        >
+          <motion.div
+            layoutId="onboarding-progress-fill"
+            className="h-full rounded-full bg-[var(--brand-primary)]"
+            initial={false}
+            animate={{ width: `${progressPct}%` }}
+            transition={reduce ? { duration: 0 } : { duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+          />
         </div>
-        <ProgressBar value={progressPct} label="Onboarding progress" />
-        <ol className="mt-3 flex gap-1.5" aria-hidden="true">
-          {STEPS.map((s, i) => (
-            <li
-              key={s.slug}
-              className={`h-1.5 flex-1 rounded-full ${i <= index ? "bg-[var(--brand-primary)]" : "bg-[var(--border-default)]"}`}
-            />
-          ))}
-        </ol>
+        <p className="sr-only">
+          Step {index + 1} of {STEPS.length}: {STEPS[index]!.label} — {progressPct} percent
+        </p>
       </div>
 
       <Card className="p-6 sm:p-8">
+        {/* Milo guides every step */}
+        <div className="mb-6 flex items-center gap-3">
+          <TutorAvatar size={48} mood={step === "complete" ? "proud" : "happy"} />
+          <TutorBubble tail="left" className="min-w-0 flex-1 px-3.5 py-2.5">
+            <p className="text-[14px] font-semibold leading-snug text-[var(--fg-primary)]">
+              {miloOnboardingLine(step, profile.displayName)}
+            </p>
+          </TutorBubble>
+        </div>
+
         {step === "welcome" ? (
           <WelcomeStep />
         ) : step === "country" ? (
@@ -269,9 +286,10 @@ export function OnboardingWizard({ step, profile }: { step: StepSlug; profile: P
               type="button"
               onClick={skip}
               disabled={saving}
-              className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-pill)] px-4 py-2 text-[14px] font-bold text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]"
+              className="min-h-11 rounded-[var(--radius-pill)] px-3 py-2 text-[13.5px] font-bold text-[var(--fg-muted)] underline-offset-4 transition-colors hover:text-[var(--fg-primary)] hover:underline"
             >
-              <SkipForward className="size-4" aria-hidden="true" /> Skip for now
+              <SkipForward className="mr-1 inline size-3.5 align-[-1px]" aria-hidden="true" />
+              Skip this step
             </button>
             <Button onClick={() => void goTo(STEPS[Math.min(index + 1, STEPS.length - 1)]!.slug)} loading={saving}>
               Continue <ArrowRight className="size-4" aria-hidden="true" />
@@ -285,9 +303,9 @@ export function OnboardingWizard({ step, profile }: { step: StepSlug; profile: P
               type="button"
               onClick={() => void goTo("complete")}
               disabled={saving}
-              className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-pill)] px-4 py-2 text-[14px] font-bold text-[var(--fg-secondary)] hover:bg-[var(--bg-subtle)]"
+              className="min-h-11 rounded-[var(--radius-pill)] px-3 py-2 text-[13.5px] font-bold text-[var(--fg-muted)] underline-offset-4 transition-colors hover:text-[var(--fg-primary)] hover:underline"
             >
-              <SkipForward className="size-4" aria-hidden="true" /> Skip for now
+              Skip setup, I know what I&apos;m doing
             </button>
             <Button onClick={() => void goTo("country")} loading={saving}>
               Let&apos;s go <ArrowRight className="size-4" aria-hidden="true" />
@@ -312,26 +330,23 @@ export function OnboardingWizard({ step, profile }: { step: StepSlug; profile: P
 function WelcomeStep() {
   return (
     <div className="text-center">
-      <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[20px] bg-[#eef2ff]">
-        <PartyPopper className="size-8 text-[var(--brand-primary)]" aria-hidden="true" />
-      </div>
       <h2 className="font-display text-2xl font-extrabold text-[var(--fg-primary)]">Welcome to Sherpa</h2>
       <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-[var(--fg-secondary)]">
         Nine quick steps (all skippable) so we can tailor roadmaps, notes and practice to your board and level.
         Takes under a minute.
       </p>
-      <div className="mx-auto mt-5 grid max-w-md gap-2 text-left">
+      <ul className="mx-auto mt-5 max-w-md space-y-2.5 text-left">
         {[
           "Pick your country and class",
           "Get a roadmap that fits your week",
           "Learn with notes, a Socratic tutor and practice",
         ].map((t) => (
-          <p key={t} className="flex items-center gap-2.5 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] px-3.5 py-2.5 text-[14px] font-semibold text-[var(--fg-primary)]">
-            <span className="flex size-5 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[11px] font-extrabold text-white">✓</span>
+          <li key={t} className="flex items-center gap-2.5 text-[14.5px] font-semibold text-[var(--fg-primary)]">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[11px] font-extrabold text-white">✓</span>
             {t}
-          </p>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -369,7 +384,7 @@ function PickerStep({
             role="radio"
             aria-checked={value === ""}
             onClick={() => onPick("")}
-            className={`min-h-11 rounded-[var(--radius-md)] border-2 px-3.5 py-2.5 text-left ${value === "" ? "border-[var(--brand-primary)] bg-[#eef2ff]" : "border-[var(--border-default)] hover:border-[var(--border-strong)]"}`}
+            className={`min-h-11 rounded-[var(--radius-md)] border-2 px-3.5 py-2.5 text-left transition-all duration-150 will-change-transform hover:scale-[1.02] hover:shadow-[var(--shadow-md)] ${value === "" ? "border-[var(--brand-primary)] bg-[#eef2ff]" : "border-[var(--border-default)] hover:border-[var(--border-strong)]"}`}
           >
             <span className="block text-[14px] font-bold text-[var(--fg-primary)]">No stream</span>
           </button>
@@ -381,7 +396,7 @@ function PickerStep({
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onPick(o.value)}
-            className={`min-h-11 rounded-[var(--radius-md)] border-2 px-3.5 py-2.5 text-left transition-colors ${
+            className={`min-h-12 rounded-[var(--radius-md)] border-2 px-3.5 py-3 text-left transition-all duration-150 will-change-transform hover:scale-[1.02] hover:shadow-[var(--shadow-md)] ${
               value === o.value
                 ? "border-[var(--brand-primary)] bg-[#eef2ff]"
                 : "border-[var(--border-default)] hover:border-[var(--border-strong)]"
