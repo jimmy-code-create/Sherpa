@@ -31,9 +31,11 @@ create table if not exists curricula (
   created_at timestamptz not null default now()
 );
 
-create type if not exists level_stage as enum (
+do $$ begin
+  create type level_stage as enum (
   'primary','middle','secondary','senior_secondary','ug','pg','doctorate','competitive'
 );
+exception when duplicate_object then null; end $$;
 
 create table if not exists levels (
   id uuid primary key default gen_random_uuid(),
@@ -64,7 +66,9 @@ create table if not exists subjects (
   created_at timestamptz not null default now()
 );
 
-create type if not exists syllabus_weight as enum ('low','medium','high');
+do $$ begin
+  create type syllabus_weight as enum ('low','medium','high');
+exception when duplicate_object then null; end $$;
 
 create table if not exists chapters (
   id uuid primary key default gen_random_uuid(),
@@ -78,7 +82,9 @@ create table if not exists chapters (
   created_at timestamptz not null default now()
 );
 
-create type if not exists difficulty as enum ('easy','medium','hard');
+do $$ begin
+  create type difficulty as enum ('easy','medium','hard');
+exception when duplicate_object then null; end $$;
 
 create table if not exists topics (
   id uuid primary key default gen_random_uuid(),
@@ -89,8 +95,12 @@ create table if not exists topics (
 );
 
 -- ── Resources (allowlist) ───────────────────────────────────────────────────
-create type if not exists resource_type as enum ('video','course','book','pdf','practice');
-create type if not exists cost_type as enum ('free','freemium','paid');
+do $$ begin
+  create type resource_type as enum ('video','course','book','pdf','practice');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type cost_type as enum ('free','freemium','paid');
+exception when duplicate_object then null; end $$;
 
 create table if not exists resources (
   id uuid primary key default gen_random_uuid(),
@@ -112,7 +122,9 @@ create table if not exists resources (
 );
 
 -- ── Profiles (extends auth.users) ───────────────────────────────────────────
-create type if not exists proficiency as enum ('beginner','intermediate','advanced');
+do $$ begin
+  create type proficiency as enum ('beginner','intermediate','advanced');
+exception when duplicate_object then null; end $$;
 
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -147,7 +159,9 @@ create table if not exists roadmaps (
   unique (user_id, chapter_id)
 );
 
-create type if not exists note_depth as enum ('quick','standard','deep');
+do $$ begin
+  create type note_depth as enum ('quick','standard','deep');
+exception when duplicate_object then null; end $$;
 
 create table if not exists note_artifacts (
   id uuid primary key default gen_random_uuid(),
@@ -163,7 +177,9 @@ create table if not exists note_artifacts (
   unique (chapter_id, depth, language, version)
 );
 
-create type if not exists progress_status as enum ('not_started','in_progress','mastered');
+do $$ begin
+  create type progress_status as enum ('not_started','in_progress','mastered');
+exception when duplicate_object then null; end $$;
 
 create table if not exists progress (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -208,7 +224,9 @@ create table if not exists spaced_rep_cards (
 create index if not exists srs_due_idx on spaced_rep_cards (user_id, due_at);
 
 -- ── Consent log ─────────────────────────────────────────────────────────────
-create type if not exists consent_method as enum ('accept_all','reject_all','custom');
+do $$ begin
+  create type consent_method as enum ('accept_all','reject_all','custom');
+exception when duplicate_object then null; end $$;
 
 create table if not exists consent_log (
   id uuid primary key default gen_random_uuid(),
@@ -224,8 +242,12 @@ create table if not exists consent_log (
 );
 
 -- ── Content reports ─────────────────────────────────────────────────────────
-create type if not exists report_reason as enum ('incorrect','offensive','uncited','other');
-create type if not exists report_status as enum ('open','in_review','resolved','dismissed');
+do $$ begin
+  create type report_reason as enum ('incorrect','offensive','uncited','other');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create type report_status as enum ('open','in_review','resolved','dismissed');
+exception when duplicate_object then null; end $$;
 
 create table if not exists content_reports (
   id uuid primary key default gen_random_uuid(),
@@ -261,48 +283,59 @@ alter table content_reports enable row level security;
 alter table tutor_messages enable row level security;
 
 -- Profiles: own row only; admins read all.
-create policy "profiles_select_own" on profiles for select using (auth.uid() = id);
-create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
-create policy "profiles_insert_own" on profiles for insert with check (auth.uid() = id);
 
 -- Roadmaps
-create policy "roadmaps_select_own" on roadmaps for select using (auth.uid() = user_id);
-create policy "roadmaps_insert_own" on roadmaps for insert with check (auth.uid() = user_id);
-create policy "roadmaps_update_own" on roadmaps for update using (auth.uid() = user_id);
-create policy "roadmaps_delete_own" on roadmaps for delete using (auth.uid() = user_id);
 
 -- Notes are shared, read-only for authenticated users.
-create policy "notes_select_any_auth" on note_artifacts for select using (auth.role() = 'authenticated');
 
 -- Progress
-create policy "progress_select_own" on progress for select using (auth.uid() = user_id);
-create policy "progress_upsert_own" on progress for insert with check (auth.uid() = user_id);
-create policy "progress_update_own" on progress for update using (auth.uid() = user_id);
 
 -- Quizzes
-create policy "quiz_select_own" on quiz_attempts for select using (auth.uid() = user_id);
-create policy "quiz_insert_own" on quiz_attempts for insert with check (auth.uid() = user_id);
 
 -- Spaced repetition
-create policy "srs_select_own" on spaced_rep_cards for select using (auth.uid() = user_id);
-create policy "srs_insert_own" on spaced_rep_cards for insert with check (auth.uid() = user_id);
-create policy "srs_update_own" on spaced_rep_cards for update using (auth.uid() = user_id);
-create policy "srs_delete_own" on spaced_rep_cards for delete using (auth.uid() = user_id);
 
 -- Consent: anyone may insert (anonymous consent is allowed); users read their own.
-create policy "consent_insert_any" on consent_log for insert with check (true);
-create policy "consent_select_own" on consent_log for select using (auth.uid() = user_id);
 
 -- Content reports: insert own, select own; admins handled via service role.
-create policy "reports_insert_own" on content_reports for insert with check (auth.uid() = user_id);
-create policy "reports_select_own" on content_reports for select using (auth.uid() = user_id);
 
 -- Tutor messages
-create policy "tutor_select_own" on tutor_messages for select using (auth.uid() = user_id);
-create policy "tutor_insert_own" on tutor_messages for insert with check (auth.uid() = user_id);
-create policy "tutor_delete_own" on tutor_messages for delete using (auth.uid() = user_id);
 
 -- Taxonomy + resources are public read.
+do $$ begin
+  create policy "profiles_select_own" on profiles for select using (auth.uid() = id);
+  create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
+  create policy "profiles_insert_own" on profiles for insert with check (auth.uid() = id);
+  create policy "roadmaps_select_own" on roadmaps for select using (auth.uid() = user_id);
+  create policy "roadmaps_insert_own" on roadmaps for insert with check (auth.uid() = user_id);
+  create policy "roadmaps_update_own" on roadmaps for update using (auth.uid() = user_id);
+  create policy "roadmaps_delete_own" on roadmaps for delete using (auth.uid() = user_id);
+  create policy "notes_select_any_auth" on note_artifacts for select using (auth.role() = 'authenticated');
+  create policy "progress_select_own" on progress for select using (auth.uid() = user_id);
+  create policy "progress_upsert_own" on progress for insert with check (auth.uid() = user_id);
+  create policy "progress_update_own" on progress for update using (auth.uid() = user_id);
+  create policy "quiz_select_own" on quiz_attempts for select using (auth.uid() = user_id);
+  create policy "quiz_insert_own" on quiz_attempts for insert with check (auth.uid() = user_id);
+  create policy "srs_select_own" on spaced_rep_cards for select using (auth.uid() = user_id);
+  create policy "srs_insert_own" on spaced_rep_cards for insert with check (auth.uid() = user_id);
+  create policy "srs_update_own" on spaced_rep_cards for update using (auth.uid() = user_id);
+  create policy "srs_delete_own" on spaced_rep_cards for delete using (auth.uid() = user_id);
+  create policy "consent_insert_any" on consent_log for insert with check (true);
+  create policy "consent_select_own" on consent_log for select using (auth.uid() = user_id);
+  create policy "reports_insert_own" on content_reports for insert with check (auth.uid() = user_id);
+  create policy "reports_select_own" on content_reports for select using (auth.uid() = user_id);
+  create policy "tutor_select_own" on tutor_messages for select using (auth.uid() = user_id);
+  create policy "tutor_insert_own" on tutor_messages for insert with check (auth.uid() = user_id);
+  create policy "tutor_delete_own" on tutor_messages for delete using (auth.uid() = user_id);
+  create policy "public_read" on countries for select using (true);
+  create policy "public_read" on curricula for select using (true);
+  create policy "public_read" on levels for select using (true);
+  create policy "public_read" on streams for select using (true);
+  create policy "public_read" on subjects for select using (true);
+  create policy "public_read" on chapters for select using (true);
+  create policy "public_read" on topics for select using (true);
+  create policy "resources_public_read" on resources for select using (verified = true);
+exception when duplicate_object then null; end $$;
+
 alter table countries enable row level security;
 alter table curricula enable row level security;
 alter table levels enable row level security;
@@ -311,14 +344,6 @@ alter table subjects enable row level security;
 alter table chapters enable row level security;
 alter table topics enable row level security;
 alter table resources enable row level security;
-create policy "public_read" on countries for select using (true);
-create policy "public_read" on curricula for select using (true);
-create policy "public_read" on levels for select using (true);
-create policy "public_read" on streams for select using (true);
-create policy "public_read" on subjects for select using (true);
-create policy "public_read" on chapters for select using (true);
-create policy "public_read" on topics for select using (true);
-create policy "resources_public_read" on resources for select using (verified = true);
 
 -- KV table backing the app store when Supabase env vars are set
 -- (serverless-safe persistence; accessed only with the service-role key,

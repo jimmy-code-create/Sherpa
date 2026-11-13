@@ -5,6 +5,21 @@ fits your week, original multi-depth notes, vetted institute recommendations, a
 Socratic tutor that asks before it answers, adaptive quizzes, and spaced
 repetition — as a Next.js 15 app with a Supabase backend.
 
+## Live deployment
+
+- **Production URL: https://sherpa-virid.vercel.app** (Vercel project `sherpa`,
+  `prj_eU7WZl5bnKJTDnlIUAEyqOuhZn6C`, team `just`, deployed from branch
+  `arena/5cb9cb69-sherpa` @ `038d6a9`, deployment `dpl_12rGNzSabxPQBt4kJU9Nxt2aLTMW`,
+  target production). Env vars on Vercel: `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `SHERPA_SESSION_SECRET` (production/preview/development).
+- **Supabase project ref `iqgststtykzohmsyvyjk`** (org `exikjxsiktvociuaactb`):
+  `supabase/migrations/0001_init.sql` applied as migration `0001_init` (17 tables
+  + RLS), `supabase/seed.sql` as `0002_seed` (8 countries, 7 curricula, 9 levels,
+  7 streams, 7 subjects, 8 chapters, 20 allowlisted resources). Auth site URL
+  `https://sherpa-virid.vercel.app`, redirect allowlist includes
+  `http://localhost:3000/**` and `https://*.vercel.app/**`.
+
 ## Quick start (zero config, Local Demo Mode)
 
 ```bash
