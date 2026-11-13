@@ -13,17 +13,18 @@ import { usePathname } from "next/navigation";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
-/** Fade/slide page transitions on every route change. Wrap once in the root layout. */
+/** Fade/slide page transitions on every route change. Wrap once in the root layout.
+ *  Simultaneous (not mode="wait") so navigation never feels like it stalls. */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence initial={false}>
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.25, ease: EASE }}
+        exit={{ opacity: 0, y: -4 }}
+        transition={{ duration: 0.18, ease: EASE }}
       >
         {children}
       </motion.div>

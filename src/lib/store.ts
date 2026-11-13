@@ -226,10 +226,17 @@ async function kvSave(d: Database): Promise<void> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
+    // Generated notes are a regenerable cache (deterministic local generator,
+    // 30-day TTL) — keep them out of the KV row so the payload stays small.
+    const { notes, ...persisted } = d;
     await fetch(`${rest.base}/sherpa_kv`, {
       method: "POST",
       headers: { ...rest.headers, Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify({ key: KV_KEY, payload: d, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        key: KV_KEY,
+        payload: { ...persisted, notes: [] },
+        updated_at: new Date().toISOString(),
+      }),
       signal: ctrl.signal,
     });
   } catch (err) {
@@ -252,13 +259,26 @@ async function kvDelete(): Promise<void> {
   }
 }
 
+// In Supabase mode we keep a short-lived in-memory copy of the remote row so
+// a page that performs many reads (hub, review, settings…) costs ONE PostgREST
+// round-trip per second per instance instead of one per read. Writes always
+// re-read fresh (bypassing the cache) and then upsert, so multi-instance
+// serverless still converges on the same state.
+const KV_CACHE_TTL_MS = 1000;
+let kvCacheFetchedAt = 0;
+
+async function loadFresh(): Promise<Database> {
+  const remote = await kvLoad();
+  const notes = db?.notes ?? [];
+  db = remote ? { ...remote, notes } : structuredClone(EMPTY);
+  kvCacheFetchedAt = Date.now();
+  return db;
+}
+
 async function load(): Promise<Database> {
   if (supabaseRest()) {
-    // Serverless-safe: always read fresh from Postgres so every function
-    // instance (Vercel may run many) sees the same users/progress.
-    const remote = await kvLoad();
-    db = remote ?? structuredClone(EMPTY);
-    return db;
+    if (db && Date.now() - kvCacheFetchedAt < KV_CACHE_TTL_MS) return db;
+    return loadFresh();
   }
   if (db) return db;
   if (loadPromise) return loadPromise;
@@ -301,6 +321,7 @@ export async function flush(): Promise<void> {
 export async function resetStore(): Promise<void> {
   db = structuredClone(EMPTY);
   loadPromise = null;
+  kvCacheFetchedAt = 0;
   await kvDelete();
   try {
     await fs.rm(DATA_FILE, { force: true });
