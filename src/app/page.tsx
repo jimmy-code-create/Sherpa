@@ -17,6 +17,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { HeroPreview } from "@/components/marketing/hero-preview";
 import { FaqAccordion } from "@/components/marketing/faq";
 import { Badge, ButtonLink, SectionHeading, Card } from "@/components/ui";
+import { ScrollReveal, Float } from "@/components/motion";
 import { getSession } from "@/lib/session";
 
 const FEATURES = [
@@ -226,20 +227,22 @@ export default async function LandingPage() {
                         className="absolute left-[calc(100%-8px)] top-9 hidden h-0.5 w-8 bg-[var(--border-default)] md:block"
                       />
                     ) : null}
-                    <Card className="h-full p-5">
-                      <div className="flex items-center gap-3">
-                        <span className="flex size-10 items-center justify-center rounded-full bg-[var(--brand-primary)] font-display text-base font-extrabold text-white">
-                          {step.n}
-                        </span>
-                        <Icon className="size-5 text-[var(--brand-primary)]" aria-hidden="true" />
-                      </div>
-                      <h3 className="mt-3.5 font-display text-[20px] font-extrabold leading-snug text-[var(--fg-primary)]">
-                        {step.title}
-                      </h3>
-                      <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--fg-secondary)]">
-                        {step.body}
-                      </p>
-                    </Card>
+                    <ScrollReveal delay={index * 0.08} className="h-full">
+                      <Card hover className="h-full p-5">
+                        <div className="flex items-center gap-3">
+                          <span className="flex size-10 items-center justify-center rounded-full bg-[var(--brand-primary)] font-display text-base font-extrabold text-white">
+                            {step.n}
+                          </span>
+                          <Icon className="size-5 text-[var(--brand-primary)]" aria-hidden="true" />
+                        </div>
+                        <h3 className="mt-3.5 font-display text-[20px] font-extrabold leading-snug text-[var(--fg-primary)]">
+                          {step.title}
+                        </h3>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--fg-secondary)]">
+                          {step.body}
+                        </p>
+                      </Card>
+                    </ScrollReveal>
                   </li>
                 );
               })}

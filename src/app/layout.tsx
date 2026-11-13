@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CookieBanner } from "@/components/cookie-consent";
 import { PwaRegistration } from "@/components/pwa";
+import { PageTransition } from "@/components/motion";
 
 // Fonts are self-hosted from the @fontsource npm packages (works offline and
 // keeps LCP fast — no third-party font request at runtime).
@@ -101,7 +102,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <ThemeProvider>
-          <div id="main">{children}</div>
+          <div id="main">
+            <PageTransition>{children}</PageTransition>
+          </div>
           <CookieBanner />
           <PwaRegistration />
         </ThemeProvider>
